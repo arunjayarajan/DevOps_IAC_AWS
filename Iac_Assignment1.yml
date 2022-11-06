@@ -45,7 +45,7 @@ Resources:
     Properties:
       VpcId: !Ref VPC
       InternetGatewayId: !Ref InternetGateway
-    # Some route tables for our subnets:
+# Some route tables for our subnets:
   PublicRouteTable:
     Type: AWS::EC2::RouteTable
     Properties:
@@ -60,7 +60,7 @@ Resources:
       RouteTableId: !Ref PublicRouteTable
       DestinationCidrBlock: 0.0.0.0/0
       GatewayId: !Ref InternetGateway
-  
+  #To associate Public Route and publlic subnet
   mySubnetRouteTableAssociation:
     Type: AWS::EC2::SubnetRouteTableAssociation
     Properties:
@@ -72,8 +72,7 @@ Resources:
     Properties:
       InstanceType: !Ref InstanceType
       ImageId: ami-0ee415e1b8b71305f
-   #   SecurityGroupIds:
-   #     - !Ref WebServerSecurityGroup
+      KeyName: !Ref KeyName
       Tags:
         - Key: Name
           Value: IAC_Demo_JumpBox
@@ -90,6 +89,7 @@ Resources:
     Properties:
       InstanceType: !Ref InstanceType
       ImageId: ami-0ee415e1b8b71305f
+      KeyName: !Ref KeyName
       SubnetId: !Ref PrivateSubnet
       SecurityGroupIds:
         - !Ref AppInstanceSecurityGroup
@@ -138,3 +138,39 @@ Resources:
           FromPort: 80
           ToPort: 80
           CidrIp: !Ref TCPLocation
+#Outbound rule for App Server. To connect between app and jumpbox
+  OutboundRuleApp:
+    Type: AWS::EC2::SecurityGroupEgress
+    Properties:
+      IpProtocol: tcp
+      FromPort: 22
+      ToPort: 22
+      DestinationSecurityGroupId: !GetAtt WebServerSecurityGroup.GroupId
+      GroupId: !GetAtt AppInstanceSecurityGroup.GroupId
+#Inbound rule for App Server. To connect between app and jumpbox
+  InboundRuleApp:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      IpProtocol: tcp
+      FromPort: 22
+      ToPort: 22
+      SourceSecurityGroupId: !GetAtt WebServerSecurityGroup.GroupId
+      GroupId: !GetAtt AppInstanceSecurityGroup.GroupId
+#Outbound rule for Jump Box Server. To connect between app and jumpbox
+  OutboundRuleJump:
+    Type: AWS::EC2::SecurityGroupEgress
+    Properties:
+      IpProtocol: tcp
+      FromPort: 22
+      ToPort: 22
+      DestinationSecurityGroupId: !GetAtt AppInstanceSecurityGroup.GroupId
+      GroupId: !GetAtt WebServerSecurityGroup.GroupId
+#Inbound rule for Jump Box Server. To connect between app and jumpbox
+  InboundRuleJump:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      IpProtocol: tcp
+      FromPort: 22
+      ToPort: 22
+      SourceSecurityGroupId: !GetAtt AppInstanceSecurityGroup.GroupId
+      GroupId: !GetAtt WebServerSecurityGroup.GroupId
