@@ -1,17 +1,18 @@
 AWSTemplateFormatVersion: 2010-09-09
 Description: 'Create a VPC and add an EC2 instance'
 Parameters:
-  InstanceType:
-    Description: WebServer EC2 instance type
+  LatestAmiId:
+    Type: 'AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>'
+    Default: '/aws/service/ami-amazon-linux-latest/amzn2-ami-hvm-x86_64-gp2'
+  EnvironmentName:
+    Description: Environment Name to deploy the server
     Type: String
-    Default: t2.micro
-    AllowedValues:
-      - t2.micro
-    ConstraintDescription: must be a valid EC2 instance type.
+    AllowedValues: [development, production]
+    ConstraintDescription: must be development or production
   KeyName:
     Description: Name of an existing EC2 KeyPair to enable SSH access to the instance.
     Type: 'AWS::EC2::KeyPair::KeyName'
-    ConstraintDescription: must be the name of an existing EC2 KeyPair.
+    ConstraintDescription: Must be the name of an existing EC2 KeyPair.
   SSHLocation:
     Description: ' The IP address range that can be used to access the web server using SSH.'
     Type: String
@@ -21,13 +22,64 @@ Parameters:
     AllowedPattern: '(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})/(\d{1,2})'
     ConstraintDescription: Must be a valid IP CIDR range of the form x.x.x.x/x.
   TCPLocation:
-    Description: ' The IP address range that can be used to access the web server using TCP from JumpBox.'
+    Description: ' The IP address range that can be used to access the server using TCP from JumpBox.'
     Type: String
     MinLength: '9'
     MaxLength: '18'
     Default: 10.0.1.0/24
     AllowedPattern: '(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})/(\d{1,2})'
     ConstraintDescription: Must be a valid IP CIDR range of the form x.x.x.x/x.
+
+Mappings:
+  AWSRegionArch2AMI:
+    af-south-1:
+      HVM64: ami-06db08e8636583118
+    ap-east-1:
+      HVM64: ami-0921e2da2f22f9617
+    ap-northeast-1:
+      HVM64: ami-06098fd00463352b6
+    ap-northeast-2:
+      HVM64: ami-07464b2b9929898f8
+    ap-northeast-3:
+      HVM64: ami-0b96303a469fa0678
+    ap-south-1:
+      HVM64: ami-0bcf5425cdc1d8a85
+    ap-southeast-1:
+      HVM64: ami-03ca998611da0fe12
+    ap-southeast-2:
+      HVM64: ami-06202e06492f46177
+    ca-central-1:
+      HVM64: ami-09934b230a2c41883
+    eu-central-1:
+      HVM64: ami-0db9040eb3ab74509
+    eu-north-1:
+      HVM64: ami-02baf2b4223a343e8
+    eu-south-1:
+      HVM64: ami-081e7f992eee19465
+    eu-west-1:
+      HVM64: ami-0ee415e1b8b71305f
+    eu-west-2:
+      HVM64: ami-0fbec3e0504ee1970
+    eu-west-3:
+      HVM64: ami-00dd995cb6f0a5219
+    me-south-1:
+      HVM64: ami-0502022ce8bfa56a9
+    sa-east-1:
+      HVM64: ami-0c27c96aaa148ba6d
+    us-east-1:
+      HVM64: ami-09d3b3274b6c5d4aa
+    us-east-2:
+      HVM64: ami-05d72852800cbf29e
+    us-west-1:
+      HVM64: ami-0577b787189839998
+    us-west-2:
+      HVM64: ami-0518bb0e75d3619ca
+  EnvironmentToInstanceType:
+    development:
+      instanceType: t2.micro
+    production:
+      instanceType: t2.small #this is only for demo. Selecting t2.small will incur cost
+
 Resources:
   VPC:
     Type: 'AWS::EC2::VPC'
@@ -35,6 +87,7 @@ Resources:
       EnableDnsSupport: 'true'
       EnableDnsHostnames: 'true'
       CidrBlock: 10.0.0.0/16
+
 # Internet Access for the VPC     
   InternetGateway:
     Type: AWS::EC2::InternetGateway
@@ -45,6 +98,7 @@ Resources:
     Properties:
       VpcId: !Ref VPC
       InternetGatewayId: !Ref InternetGateway
+
 # Some route tables for our subnets:
   PublicRouteTable:
     Type: AWS::EC2::RouteTable
@@ -67,15 +121,15 @@ Resources:
       SubnetId: !Ref PublicSubnet
       RouteTableId: !Ref PublicRouteTable
 #EC2Instance for the JumpBox
-  EC2Instance1: 
+  JumpBoxInstance: 
     Type: 'AWS::EC2::Instance'
     Properties:
-      InstanceType: !Ref InstanceType
-      ImageId: ami-0ee415e1b8b71305f
+      InstanceType: !FindInMap [EnvironmentToInstanceType, !Ref 'EnvironmentName', instanceType]
+      ImageId: !Ref LatestAmiId
       KeyName: !Ref KeyName
       Tags:
         - Key: Name
-          Value: IAC_Demo_JumpBox
+          Value: JumpBox
       NetworkInterfaces: 
       - AssociatePublicIpAddress: "true"
         DeviceIndex: "0"
@@ -84,18 +138,33 @@ Resources:
           - !Ref WebServerSecurityGroup
 
 #EC2Instance for the App server
-  EC2Instance2: 
+  AppServerInstance: 
     Type: 'AWS::EC2::Instance'
     Properties:
-      InstanceType: !Ref InstanceType
-      ImageId: ami-0ee415e1b8b71305f
+      InstanceType: !FindInMap [EnvironmentToInstanceType, !Ref 'EnvironmentName', instanceType]
+      ImageId: !Ref LatestAmiId
       KeyName: !Ref KeyName
-      SubnetId: !Ref PrivateSubnet
+      SubnetId: !Ref AppServerPrivateSubnet
       SecurityGroupIds:
         - !Ref AppInstanceSecurityGroup
       Tags:
         - Key: Name
-          Value: IAC_Demo_AppInstance
+          Value: AppServerInstance
+
+#EC2Instance for the DB server
+  DBServerInstance: 
+    Type: 'AWS::EC2::Instance'
+    Properties:
+      InstanceType: !FindInMap [EnvironmentToInstanceType, !Ref 'EnvironmentName', instanceType]
+      ImageId: !Ref LatestAmiId
+      KeyName: !Ref KeyName
+      SubnetId: !Ref DBServerPrivateSubnet
+      SecurityGroupIds:
+        - !Ref DBInstanceSecurityGroup
+      Tags:
+        - Key: Name
+          Value: DBServerInstance
+
 #Public Subnet for Jumpbox
   PublicSubnet:
     Type: 'AWS::EC2::Subnet'
@@ -103,13 +172,22 @@ Resources:
       CidrBlock: 10.0.1.0/24
       VpcId: !Ref VPC
       MapPublicIpOnLaunch: true
+
 #Private Subnet for App Server  
-  PrivateSubnet:
+  AppServerPrivateSubnet:
     Type: 'AWS::EC2::Subnet'
     Properties:
       CidrBlock: 10.0.2.0/24
       VpcId: !Ref VPC
 
+#Private Subnet for DB Server  
+  DBServerPrivateSubnet:
+    Type: 'AWS::EC2::Subnet'
+    Properties:
+      CidrBlock: 10.0.3.0/24
+      VpcId: !Ref VPC
+
+#Security Group for JumpBox Instance
   WebServerSecurityGroup:
     Type: 'AWS::EC2::SecurityGroup'
     Properties:
@@ -124,6 +202,17 @@ Resources:
           FromPort: 80
           ToPort: 80
           CidrIp: 0.0.0.0/0
+      SecurityGroupEgress:
+        - IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+          CidrIp: 10.0.2.0/24
+        - IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+          CidrIp: 10.0.3.0/24
+
+#Security Group for App Server Instance  
   AppInstanceSecurityGroup:
     Type: 'AWS::EC2::SecurityGroup'
     Properties:
@@ -138,39 +227,37 @@ Resources:
           FromPort: 80
           ToPort: 80
           CidrIp: !Ref TCPLocation
-#Outbound rule for App Server. To connect between app and jumpbox
-  OutboundRuleApp:
-    Type: AWS::EC2::SecurityGroupEgress
+      SecurityGroupEgress:
+        - IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+          CidrIp: 10.0.1.0/24
+        - IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+          CidrIp: 10.0.3.0/24
+
+#Security Group for DB Server Instance  
+  DBInstanceSecurityGroup:
+    Type: 'AWS::EC2::SecurityGroup'
     Properties:
-      IpProtocol: tcp
-      FromPort: 22
-      ToPort: 22
-      DestinationSecurityGroupId: !GetAtt WebServerSecurityGroup.GroupId
-      GroupId: !GetAtt AppInstanceSecurityGroup.GroupId
-#Inbound rule for App Server. To connect between app and jumpbox
-  InboundRuleApp:
-    Type: AWS::EC2::SecurityGroupIngress
-    Properties:
-      IpProtocol: tcp
-      FromPort: 22
-      ToPort: 22
-      SourceSecurityGroupId: !GetAtt WebServerSecurityGroup.GroupId
-      GroupId: !GetAtt AppInstanceSecurityGroup.GroupId
-#Outbound rule for Jump Box Server. To connect between app and jumpbox
-  OutboundRuleJump:
-    Type: AWS::EC2::SecurityGroupEgress
-    Properties:
-      IpProtocol: tcp
-      FromPort: 22
-      ToPort: 22
-      DestinationSecurityGroupId: !GetAtt AppInstanceSecurityGroup.GroupId
-      GroupId: !GetAtt WebServerSecurityGroup.GroupId
-#Inbound rule for Jump Box Server. To connect between app and jumpbox
-  InboundRuleJump:
-    Type: AWS::EC2::SecurityGroupIngress
-    Properties:
-      IpProtocol: tcp
-      FromPort: 22
-      ToPort: 22
-      SourceSecurityGroupId: !GetAtt AppInstanceSecurityGroup.GroupId
-      GroupId: !GetAtt WebServerSecurityGroup.GroupId
+      VpcId: !Ref VPC
+      GroupDescription: Allow access from HTTP and SSH traffic
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: '22'
+          ToPort: '22'
+          CidrIp: !Ref TCPLocation
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          CidrIp: !Ref TCPLocation
+      SecurityGroupEgress:
+        - IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+          CidrIp: 10.0.1.0/24
+        - IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+          CidrIp: 10.0.2.0/24
