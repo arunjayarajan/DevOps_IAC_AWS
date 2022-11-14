@@ -7,8 +7,8 @@ Parameters:
   EnvironmentName:
     Description: Environment Name to deploy the server
     Type: String
-    AllowedValues: [development, production]
-    ConstraintDescription: must be development or production
+    AllowedValues: [Development, Production]
+    ConstraintDescription: must be Development or Production
   KeyName:
     Description: Name of an existing EC2 KeyPair to enable SSH access to the instance.
     Type: 'AWS::EC2::KeyPair::KeyName'
@@ -78,9 +78,9 @@ Parameters:
 
 Mappings:
   EnvironmentToInstanceType:
-    development:
+    Development:
       instanceType: t2.micro
-    production:
+    Production:
       instanceType: t2.small #production is only for demo. Selecting t2.small will incur cost
 
 Resources:
@@ -233,10 +233,10 @@ Resources:
   FrontServerPrivateSubnet:
     Type: 'AWS::EC2::Subnet'
     Properties:
-      CidrBlock: 10.0.4.0/24
+      CidrBlock: 10.0.3.0/24
       VpcId: !Ref VPC
       AvailabilityZone: !Select 
-         - 1
+         - 0
          - Fn::GetAZs: !Ref 'AWS::Region'
 
 #Private Subnets for DB Instance for high avaiability 
@@ -245,18 +245,18 @@ Resources:
     Properties:
       CidrBlock: 10.0.5.0/24
       VpcId: !Ref VPC
-      # AvailabilityZone: !Select 
-      #   - 0
-      #   - Fn::GetAZs: !Ref 'AWS::Region'
+      AvailabilityZone: !Select 
+        - 0
+        - Fn::GetAZs: !Ref 'AWS::Region'
   
   RDSDBPrivateSubnet2:
     Type: 'AWS::EC2::Subnet'
     Properties:
       CidrBlock: 10.0.6.0/24
       VpcId: !Ref VPC
-      # AvailabilityZone: !Select 
-      #   - 1
-      #   - Fn::GetAZs: !Ref 'AWS::Region'
+      AvailabilityZone: !Select 
+        - 1
+        - Fn::GetAZs: !Ref 'AWS::Region'
 
 #Security Group for JumpBox Instance
   WebServerSecurityGroup:
@@ -273,23 +273,19 @@ Resources:
           FromPort: 80
           ToPort: 80
           CidrIp: 0.0.0.0/0
-      SecurityGroupEgress:
+      SecurityGroupEgress: #Outbound Rule
         - IpProtocol: tcp
           FromPort: 22
           ToPort: 22
-          CidrIp: 10.0.1.0/24
+          CidrIp: 10.0.1.0/24 #IP range of JumbBox
         - IpProtocol: tcp
           FromPort: 22
           ToPort: 22
-          CidrIp: 10.0.2.0/24
+          CidrIp: 10.0.2.0/24 #IP range of App Instance
         - IpProtocol: tcp
           FromPort: 22
           ToPort: 22
-          CidrIp: 10.0.3.0/24
-        - IpProtocol: tcp
-          FromPort: 22
-          ToPort: 22
-          CidrIp: 10.0.4.0/24
+          CidrIp: 10.0.3.0/24  #IP range of front facing server
 
 #Security Group for App Server Instance  
   AppInstanceSecurityGroup:
@@ -306,22 +302,22 @@ Resources:
           FromPort: 80
           ToPort: 80
           CidrIp: !Ref TCPLocation
-        - IpProtocol: tcp
-          FromPort: 3306
-          ToPort: 3306
-          CidrIp: 10.0.5.0/24
-        - IpProtocol: tcp
-          FromPort: 3306
-          ToPort: 3306
-          CidrIp: 10.0.6.0/24
-        - IpProtocol: tcp
-          FromPort: 22
-          ToPort: 22
-          CidrIp: 10.0.5.0/24
-        - IpProtocol: tcp
-          FromPort: 22
-          ToPort: 22
-          CidrIp: 10.0.6.0/24
+        # - IpProtocol: tcp 
+        #   FromPort: 3306
+        #   ToPort: 3306
+        #   CidrIp: 10.0.5.0/24
+        # - IpProtocol: tcp
+        #   FromPort: 3306
+        #   ToPort: 3306
+        #   CidrIp: 10.0.6.0/24
+        # - IpProtocol: tcp
+        #   FromPort: 22
+        #   ToPort: 22
+        #   CidrIp: 10.0.5.0/24
+        # - IpProtocol: tcp
+        #   FromPort: 22
+        #   ToPort: 22
+        #   CidrIp: 10.0.6.0/24
       SecurityGroupEgress:
         - IpProtocol: tcp
           FromPort: 22
@@ -335,14 +331,14 @@ Resources:
           FromPort: 3306
           ToPort: 3306
           CidrIp: 10.0.6.0/24
-        - IpProtocol: tcp
-          FromPort: 22
-          ToPort: 22
-          CidrIp: 10.0.5.0/24
-        - IpProtocol: tcp
-          FromPort: 22
-          ToPort: 22
-          CidrIp: 10.0.6.0/24
+        # - IpProtocol: tcp
+        #   FromPort: 22
+        #   ToPort: 22
+        #   CidrIp: 10.0.5.0/24
+        # - IpProtocol: tcp
+        #   FromPort: 22
+        #   ToPort: 22
+        #   CidrIp: 10.0.6.0/24
 
 
 #Security Group for App Server Instance  
@@ -397,8 +393,8 @@ Resources:
       GroupDescription: "Security Group for RDS DB"
       SecurityGroupIngress:
         - IpProtocol: tcp
-          FromPort: 0
-          ToPort: 65535
+          FromPort: 22
+          ToPort: 22
           CidrIp: "10.0.2.0/24"
         - IpProtocol: tcp
           FromPort: 3306
@@ -406,9 +402,13 @@ Resources:
           CidrIp: 10.0.2.0/24
       SecurityGroupEgress:
         - IpProtocol: tcp
-          FromPort: 0
-          ToPort: 65535
-          CidrIp: 0.0.0.0/0
+          FromPort: 22
+          ToPort: 22
+          CidrIp: 10.0.2.0/24
+        - IpProtocol: tcp
+          FromPort: 3306
+          ToPort: 3306
+          CidrIp: 10.0.2.0/24
       Tags:
         - Key: Name
           Value: VPCSecurityGroups 
