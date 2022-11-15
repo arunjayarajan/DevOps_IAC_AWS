@@ -1,5 +1,9 @@
 AWSTemplateFormatVersion: 2010-09-09
-Description: 'Create a VPC and add an EC2 instance'
+Description: 'This template is for creating a Infrastructure, Which contains 2 availabiliy zones 
+in a VPC with 2 public subnets and 2 private subnets. One of the public subnet contains a JumpBox from 
+which we can connect to all other instances in the VPC. There is a RDS DB with MySQl engine which can 
+be connected only from the app instance in the private subnet.'
+
 Parameters:
   LatestAmiId:
     Type: 'AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>'
@@ -84,6 +88,7 @@ Mappings:
       instanceType: t2.small #production is only for demo. Selecting t2.small will incur cost
 
 Resources:
+# VPC where our Infrastructure is hosted. Its on the network - 10.0.0.0/16  
   VPC:
     Type: 'AWS::EC2::VPC'
     Properties:
@@ -307,7 +312,7 @@ Resources:
           ToPort: 3306
           CidrIp: 10.0.6.0/24
 
-#Security Group for App Server Instance  
+#Security Group for Front facing server 
   FrontInstanceSecurityGroup:
     Type: 'AWS::EC2::SecurityGroup'
     Properties:
