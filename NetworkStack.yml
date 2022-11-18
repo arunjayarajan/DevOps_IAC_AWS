@@ -5,18 +5,18 @@ which we can connect to all other instances in the VPC. There is a RDS DB with M
 be connected only from the app instance in the private subnet.'
 
 Parameters:
-  LatestAmiId:
-    Type: 'AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>'
-    Default: '/aws/service/ami-amazon-linux-latest/amzn2-ami-hvm-x86_64-gp2'
-  EnvironmentName:
-    Description: Environment Name to deploy the server
-    Type: String
-    AllowedValues: [Development, Production]
-    ConstraintDescription: must be Development or Production
-  KeyName:
-    Description: Name of an existing EC2 KeyPair to enable SSH access to the instance.
-    Type: 'AWS::EC2::KeyPair::KeyName'
-    ConstraintDescription: Must be the name of an existing EC2 KeyPair.
+  # LatestAmiId:
+  #   Type: 'AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>'
+  #   Default: '/aws/service/ami-amazon-linux-latest/amzn2-ami-hvm-x86_64-gp2'
+  # EnvironmentName:
+  #   Description: Environment Name to deploy the server
+  #   Type: String
+  #   AllowedValues: [Development, Production]
+  #   ConstraintDescription: must be Development or Production
+  # KeyName:
+  #   Description: Name of an existing EC2 KeyPair to enable SSH access to the instance.
+  #   Type: 'AWS::EC2::KeyPair::KeyName'
+  #   ConstraintDescription: Must be the name of an existing EC2 KeyPair.
   SSHLocation:
     Description: ' The IP address range that can be used to access the web server using SSH.'
     Type: String
@@ -33,52 +33,52 @@ Parameters:
     Default: 10.0.1.0/24
     AllowedPattern: '(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})/(\d{1,2})'
     ConstraintDescription: Must be a valid IP CIDR range of the form x.x.x.x/x.
-  DBInstanceID:
-    Default: RDSDBInstance
-    Description: My database instance
-    Type: String
-    MinLength: '1'
-    MaxLength: '63'
-    AllowedPattern: '[a-zA-Z][a-zA-Z0-9]*'
-    ConstraintDescription: >-
-      Must begin with a letter and must not end with a hyphen or contain two
-      consecutive hyphens.
-  DBName:
-    Default: RDSDemoDB
-    Description: Demo database
-    Type: String
-    MinLength: '1'
-    MaxLength: '64'
-    AllowedPattern: '[a-zA-Z][a-zA-Z0-9]*'
-    ConstraintDescription: Must begin with a letter and contain only alphanumeric characters.
-  DBInstanceClass:
-    Default: db.t2.micro
-    Description: DB instance class
-    Type: String
-    ConstraintDescription: Must select a valid DB instance type.
-  DBAllocatedStorage:
-    Default: '20'
-    Description: The size of the database (GiB)
-    Type: Number
-    MinValue: '20'
-    MaxValue: '65536'
-    ConstraintDescription: must be between 20 and 65536 GiB.
-  DBUsername:
-    NoEcho: 'true'
-    Description: Username for MySQL database access
-    Type: String
-    MinLength: '1'
-    MaxLength: '16'
-    AllowedPattern: '[a-zA-Z][a-zA-Z0-9]*'
-    ConstraintDescription: must begin with a letter and contain only alphanumeric characters.
-  DBPassword:
-    NoEcho: 'true'
-    Description: Password MySQL database access
-    Type: String
-    MinLength: '8'
-    MaxLength: '41'
-    AllowedPattern: '[a-zA-Z0-9]*'
-    ConstraintDescription: must contain only alphanumeric characters.
+  # DBInstanceID:
+  #   Default: RDSDBInstance
+  #   Description: My database instance
+  #   Type: String
+  #   MinLength: '1'
+  #   MaxLength: '63'
+  #   AllowedPattern: '[a-zA-Z][a-zA-Z0-9]*'
+  #   ConstraintDescription: >-
+  #     Must begin with a letter and must not end with a hyphen or contain two
+  #     consecutive hyphens.
+  # DBName:
+  #   Default: RDSDemoDB
+  #   Description: Demo database
+  #   Type: String
+  #   MinLength: '1'
+  #   MaxLength: '64'
+  #   AllowedPattern: '[a-zA-Z][a-zA-Z0-9]*'
+  #   ConstraintDescription: Must begin with a letter and contain only alphanumeric characters.
+  # DBInstanceClass:
+  #   Default: db.t2.micro
+  #   Description: DB instance class
+  #   Type: String
+  #   ConstraintDescription: Must select a valid DB instance type.
+  # DBAllocatedStorage:
+  #   Default: '20'
+  #   Description: The size of the database (GiB)
+  #   Type: Number
+  #   MinValue: '20'
+  #   MaxValue: '65536'
+  #   ConstraintDescription: must be between 20 and 65536 GiB.
+  # DBUsername:
+  #   NoEcho: 'true'
+  #   Description: Username for MySQL database access
+  #   Type: String
+  #   MinLength: '1'
+  #   MaxLength: '16'
+  #   AllowedPattern: '[a-zA-Z][a-zA-Z0-9]*'
+  #   ConstraintDescription: must begin with a letter and contain only alphanumeric characters.
+  # DBPassword:
+    # NoEcho: 'true'
+    # Description: Password MySQL database access
+    # Type: String
+    # MinLength: '8'
+    # MaxLength: '41'
+    # AllowedPattern: '[a-zA-Z0-9]*'
+    # ConstraintDescription: must contain only alphanumeric characters.
 
 Mappings:
   EnvironmentToInstanceType:
@@ -313,7 +313,31 @@ Outputs:
     Value: !Ref FrontServerPrivateSubnet
     Export:
       Name: FrontServerPrivateSubnet
-
+  WebServerSecurityGroupExport:
+    Description: Private Subnet for AppServer Instance
+    Value: !Ref WebServerSecurityGroup
+    Export:
+      Name: WebServerSecurityGroup
+  AppInstanceSecurityGroupExport:
+    Description: Private Subnet for AppServer Instance
+    Value: !Ref AppInstanceSecurityGroup
+    Export:
+      Name: AppInstanceSecurityGroup
+  FrontInstanceSecurityGroupExport:
+    Description: Private Subnet for AppServer Instance
+    Value: !Ref FrontInstanceSecurityGroup
+    Export:
+      Name: FrontInstanceSecurityGroup
+  DBInstanceSecurityGroupExport:
+    Description: Private Subnet for AppServer Instance
+    Value: !GetAtt RDSDBEC2SecurityGroup.GroupId
+    Export:
+      Name: RDSDBEC2SecurityGroup
+  DBInstanceSubnetGroupExport:
+    Description: Private Subnet for AppServer Instance
+    Value: !Ref RDSDBSubnetGroup
+    Export:
+      Name: RDSDBSubnetGroup
   VPC:
     Description: VPC for the Demo.
     Value: !Ref VPC
