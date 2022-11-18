@@ -369,3 +369,25 @@ Resources:
       Tags:
         - Key: Name
           Value: VPCSecurityGroups 
+
+Outputs: 
+  VPCId: 
+    Description: "vpc id"
+    Value: !Ref VPC
+    Export:
+      Name: VPCId
+  JumpBoxPublicIp:
+    Description: 'JumpBox Public IP'
+    Value: !Sub '${JumpBoxInstance.PublicIp}'
+    Export:
+      Name: JumpBoxIp
+  ApplicationPrivateIp:
+    Description: 'Application Private IP'
+    Value: !Sub '${AppServerInstance.PrivateIp}'
+    Export:
+      Name: ApplicationPrivateIp
+  RDSDBDetails:
+    Description: 'MySQL Connection'
+    Value: !Sub '${RDSDB.Endpoint.Address}'
+    Export:
+      Name: RDSDBDetails
