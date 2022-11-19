@@ -1,13 +1,7 @@
 AWSTemplateFormatVersion: 2010-09-09
-Description: 'This template is for creating a Infrastructure, Which contains 2 availabiliy zones 
-in a VPC with 2 public subnets and 2 private subnets. One of the public subnet contains a JumpBox from 
-which we can connect to all other instances in the VPC. There is a RDS DB with MySQl engine which can 
-be connected only from the app instance in the private subnet.'
+Description: 'This template is for creating DB Instance'
 
 Parameters:
-  # NetworkStackURL:
-  #   Description: URL of the Network Stack
-  #   Type: String
   DBInstanceID:
     Default: RDSDBInstance
     Description: My database instance
@@ -56,20 +50,10 @@ Parameters:
     ConstraintDescription: must contain only alphanumeric characters.
 
 Resources:
-  # NetworkStack:
-  #   Type: AWS::CloudFormation::Stack
-  #   Properties:
-  #     TemplateURL: !Ref NetworkStackURL
-  #     # Parameters:
-  #     #   ApplicationName: !Ref AWS::StackName
-  #      # VPCId: !ImportValue VPC
-  #     TimeoutInMinutes: 5
-#RDS DB Instance 
   RDSDB:
     Type: 'AWS::RDS::DBInstance'
     Properties:
       DBInstanceIdentifier: !Ref DBInstanceID
-      #DBSubnetGroupName: !GetAtt NetworkStack.Outputs.DBInstanceSubnetGroupExport
       DBSubnetGroupName: !ImportValue RDSDBSubnetGroup
       DBName: !Ref DBName
       DBInstanceClass: !Ref DBInstanceClass
@@ -79,5 +63,4 @@ Resources:
       MasterUserPassword: !Ref DBPassword
       MultiAZ: true
       VPCSecurityGroups:
-        #- !GetAtt NetworkStack.Outputs.DBInstanceSecurityGroupExport
         - !ImportValue RDSDBEC2SecurityGroup
