@@ -5,9 +5,9 @@ which we can connect to all other instances in the VPC. There is a RDS DB with M
 be connected only from the app instance in the private subnet.'
 
 Parameters:
-  NetworkStackURL:
-    Description: URL of the Network Stack
-    Type: String
+  # NetworkStackURL:
+  #   Description: URL of the Network Stack
+  #   Type: String
   DBInstanceID:
     Default: RDSDBInstance
     Description: My database instance
@@ -56,20 +56,21 @@ Parameters:
     ConstraintDescription: must contain only alphanumeric characters.
 
 Resources:
-  NetworkStack:
-    Type: AWS::CloudFormation::Stack
-    Properties:
-      TemplateURL: !Ref NetworkStackURL
-      # Parameters:
-      #   ApplicationName: !Ref AWS::StackName
-       # VPCId: !ImportValue VPC
-      TimeoutInMinutes: 5
+  # NetworkStack:
+  #   Type: AWS::CloudFormation::Stack
+  #   Properties:
+  #     TemplateURL: !Ref NetworkStackURL
+  #     # Parameters:
+  #     #   ApplicationName: !Ref AWS::StackName
+  #      # VPCId: !ImportValue VPC
+  #     TimeoutInMinutes: 5
 #RDS DB Instance 
   RDSDB:
     Type: 'AWS::RDS::DBInstance'
     Properties:
       DBInstanceIdentifier: !Ref DBInstanceID
-      DBSubnetGroupName: !GetAtt NetworkStack.Outputs.DBInstanceSubnetGroupExport
+      #DBSubnetGroupName: !GetAtt NetworkStack.Outputs.DBInstanceSubnetGroupExport
+      DBSubnetGroupName: !ImportValue RDSDBSubnetGroup
       DBName: !Ref DBName
       DBInstanceClass: !Ref DBInstanceClass
       AllocatedStorage: !Ref DBAllocatedStorage
@@ -78,4 +79,5 @@ Resources:
       MasterUserPassword: !Ref DBPassword
       MultiAZ: true
       VPCSecurityGroups:
-        - !GetAtt NetworkStack.Outputs.DBInstanceSecurityGroupExport
+        #- !GetAtt NetworkStack.Outputs.DBInstanceSecurityGroupExport
+        - !ImportValue RDSDBEC2SecurityGroup

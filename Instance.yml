@@ -5,9 +5,9 @@ which we can connect to all other instances in the VPC. There is a RDS DB with M
 be connected only from the app instance in the private subnet.'
 
 Parameters:
-  NetworkStackURL:
-    Description: URL of the Network Stack
-    Type: String
+  # NetworkStackURL:
+  #   Description: URL of the Network Stack
+  #   Type: String
   LatestAmiId:
     Type: 'AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>'
     Default: '/aws/service/ami-amazon-linux-latest/amzn2-ami-hvm-x86_64-gp2'
@@ -18,8 +18,12 @@ Parameters:
     ConstraintDescription: must be Development or Production
   KeyName:
     Description: Name of an existing EC2 KeyPair to enable SSH access to the instance.
-    Type: 'AWS::EC2::KeyPair::KeyName'
+    Type: String
     ConstraintDescription: Must be the name of an existing EC2 KeyPair.
+  # KeyName:
+  #   Description: Name of an existing EC2 KeyPair to enable SSH access to the instance.
+  #   Type: 'AWS::EC2::KeyPair::KeyName'
+  #   ConstraintDescription: Must be the name of an existing EC2 KeyPair.
   # SSHLocation:
   #   Description: ' The IP address range that can be used to access the web server using SSH.'
   #   Type: String
@@ -91,14 +95,14 @@ Mappings:
       instanceType: t2.small #production is only for demo. Selecting t2.small will incur cost
 
 Resources:
-  NetworkStack:
-    Type: AWS::CloudFormation::Stack
-    Properties:
-      TemplateURL: !Ref NetworkStackURL
-      # Parameters:
-      #   ApplicationName: !Ref AWS::StackName
-       # VPCId: !ImportValue VPC
-      TimeoutInMinutes: 5
+  # NetworkStack:
+  #   Type: AWS::CloudFormation::Stack
+  #   Properties:
+  #     TemplateURL: !Ref NetworkStackURL
+  #     # Parameters:
+  #     #   ApplicationName: !Ref AWS::StackName
+  #      # VPCId: !ImportValue VPC
+  #     TimeoutInMinutes: 5
 #EC2Instance for the JumpBox
   JumpBoxInstance: 
     Type: 'AWS::EC2::Instance'
@@ -112,9 +116,9 @@ Resources:
       NetworkInterfaces: 
       - AssociatePublicIpAddress: "true"
         DeviceIndex: "0"
-        SubnetId:  !GetAtt NetworkStack.Outputs.JumpBoxPublicSubnetExport
+        SubnetId:  !ImportValue JumpBoxPublicSubnet
         GroupSet: 
-          - !GetAtt NetworkStack.Outputs.WebServerSecurityGroupExport
+          - !ImportValue WebServerSecurityGroup
 #EC2Instance for the Front facing Server
   FrontServerInstance: 
     Type: 'AWS::EC2::Instance'
@@ -122,9 +126,9 @@ Resources:
       InstanceType: !FindInMap [EnvironmentToInstanceType, !Ref 'EnvironmentName', instanceType]
       ImageId: !Ref LatestAmiId
       KeyName: !Ref KeyName
-      SubnetId: !GetAtt NetworkStack.Outputs.FrontServerPrivateSubnetExport
+      SubnetId: !ImportValue FrontServerPrivateSubnet
       SecurityGroupIds:
-        - !GetAtt NetworkStack.Outputs.FrontInstanceSecurityGroupExport
+        - !ImportValue FrontInstanceSecurityGroup
       Tags:
         - Key: Name
           Value: FrontServerInstance
@@ -136,9 +140,9 @@ Resources:
       InstanceType: !FindInMap [EnvironmentToInstanceType, !Ref 'EnvironmentName', instanceType]
       ImageId: !Ref LatestAmiId
       KeyName: !Ref KeyName
-      SubnetId: !GetAtt NetworkStack.Outputs.AppInstancePrivateSubnetExport
+      SubnetId: !ImportValue AppServerPrivateSubnet
       SecurityGroupIds:
-        - !GetAtt NetworkStack.Outputs.AppInstanceSecurityGroupExport
+        - !ImportValue AppInstanceSecurityGroup
       Tags:
         - Key: Name
           Value: AppServerInstance
