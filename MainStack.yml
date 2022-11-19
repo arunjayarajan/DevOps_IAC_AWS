@@ -80,11 +80,13 @@ Parameters:
     AllowedPattern: '[a-zA-Z0-9]*'
     ConstraintDescription: must contain only alphanumeric characters.
 Resources:
+# Network stack contains all the network related resources for VPC, EC2 and DB instances.
     NetworkStack:
         Type: AWS::CloudFormation::Stack
         Properties:
             TemplateURL: https://cloudformationassignment.s3.eu-west-1.amazonaws.com/NetworkStack.yml
 
+# DB stack contains the RDB MySQL Engine Instance
     DBInstanceStack:
         Type: AWS::CloudFormation::Stack
         DependsOn:
@@ -94,6 +96,8 @@ Resources:
             DBUsername: !Ref DBUsername
             DBPassword: !Ref DBPassword
           TemplateURL: https://cloudformationassignment.s3.eu-west-1.amazonaws.com/DBInstance.yml
+
+#EC2 Stack contains all the EC2 Instances - JumpBox, Private, Front facing server 
     EC2InstanceStack:
         Type: AWS::CloudFormation::Stack
         DependsOn:
@@ -103,14 +107,3 @@ Resources:
             KeyName: !Ref KeyName
             EnvironmentName: !Ref EnvironmentName
           TemplateURL: https://cloudformationassignment.s3.eu-west-1.amazonaws.com/Instance.yml
-Outputs: 
-  DBUsername: 
-    Description: "DB User Name"
-    Value: !Ref DBUsername
-    Export:
-      Name: DBUsername
-  DBPassword: 
-    Description: "DB User Name"
-    Value: !Ref DBPassword
-    Export:
-      Name: DBPassword

@@ -58,7 +58,7 @@ Resources:
         Value: Public
 
 # Public route table has direct routing to IGW: 
-  PublicRoute1:   
+  PublicRoute:   
     Type: AWS::EC2::Route
     DependsOn: AttachGateway
     Properties:
@@ -170,15 +170,15 @@ Resources:
         - IpProtocol: tcp
           FromPort: 22
           ToPort: 22
-          CidrIp: 10.0.1.0/24
+          CidrIp: 10.0.1.0/24 
         - IpProtocol: tcp
           FromPort: 3306
           ToPort: 3306
-          CidrIp: 10.0.5.0/24
+          CidrIp: 10.0.5.0/24 #IP Range of one of the subnet of DB instance
         - IpProtocol: tcp
           FromPort: 3306
           ToPort: 3306
-          CidrIp: 10.0.6.0/24
+          CidrIp: 10.0.6.0/24 #IP Range of second subnet of DB instance
 
 #Security Group for Front facing server 
   FrontInstanceSecurityGroup:
