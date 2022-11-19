@@ -72,3 +72,8 @@ Outputs:
     Value: !Sub '${JumpBoxInstance.PublicIp}'
     Export:
       Name: JumpBoxIp
+  ApplicationPrivateIp:
+    Description: 'Application Server Private IP'
+    Value: !Sub '${AppServerInstance.PrivateIp}'
+    Export:
+      Name: ApplicationPrivateIp

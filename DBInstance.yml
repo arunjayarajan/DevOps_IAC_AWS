@@ -64,3 +64,10 @@ Resources:
       MultiAZ: true
       VPCSecurityGroups:
         - !ImportValue RDSDBEC2SecurityGroup
+
+Outputs:
+  RDSDBDetails:
+    Description: 'MySQL DB Connection'
+    Value: !Sub '${RDSDB.Endpoint.Address}'
+    Export:
+      Name: RDSDBDetails
