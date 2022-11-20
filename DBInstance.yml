@@ -50,6 +50,7 @@ Parameters:
     ConstraintDescription: must contain only alphanumeric characters.
 
 Resources:
+#RDS DB Instance where MySQL Engine is hosted.  
   RDSDB:
     Type: 'AWS::RDS::DBInstance'
     Properties:

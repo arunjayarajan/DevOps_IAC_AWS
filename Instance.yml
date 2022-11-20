@@ -41,6 +41,7 @@ Resources:
         SubnetId:  !ImportValue JumpBoxPublicSubnet
         GroupSet: 
           - !ImportValue WebServerSecurityGroup
+
 #EC2Instance for the Front facing Server
   FrontServerInstance: 
     Type: 'AWS::EC2::Instance'
@@ -69,11 +70,14 @@ Resources:
         - Key: Name
           Value: AppServerInstance
 Outputs:
+  # Retriving the public IP of the Jump Box Instance
   JumpBoxPublicIp:
     Description: 'JumpBox Public IP'
     Value: !Sub '${JumpBoxInstance.PublicIp}'
     Export:
       Name: JumpBoxIp
+  
+  #Retriveing the Private IP of the app server instance.
   ApplicationPrivateIp:
     Description: 'Application Server Private IP'
     Value: !Sub '${AppServerInstance.PrivateIp}'
