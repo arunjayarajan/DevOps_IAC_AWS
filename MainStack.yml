@@ -9,12 +9,12 @@ Parameters:
     Type: 'AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>'
     Default: '/aws/service/ami-amazon-linux-latest/amzn2-ami-hvm-x86_64-gp2'
   EnvironmentName:
-    Description: Environment Name to deploy the server
+    Description: Environment Name to deploy the server (Selecting Production environment will incur cost)
     Type: String
-    AllowedValues: [Development, Production]
-    ConstraintDescription: must be Development or Production
+    AllowedValues: [Development, Staging, Production]
+    ConstraintDescription: Must be Development or Production
   KeyName:
-    Description: Name of an existing EC2 KeyPair to enable SSH access to the instance.
+    Description: Select the EC2 KeyPair to enable SSH access to the instance.
     Type: 'AWS::EC2::KeyPair::KeyName'
     ConstraintDescription: Must be the name of an existing EC2 KeyPair.
   SSHLocation:

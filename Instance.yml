@@ -8,8 +8,8 @@ Parameters:
   EnvironmentName:
     Description: Environment Name to deploy the server (Selecting Production environment will incur cost)
     Type: String
-    AllowedValues: [Development, Production]
-    ConstraintDescription: must be Development or Production
+    AllowedValues: [Development, Staging, Production]
+    ConstraintDescription: Must be Development or Production
   KeyName:
     Description: Name of an existing EC2 KeyPair to enable SSH access to the instance.
     Type: String
@@ -18,6 +18,8 @@ Parameters:
 Mappings:
   EnvironmentToInstanceType:
     Development:
+      instanceType: t2.micro
+    Staging:
       instanceType: t2.micro
     Production:
       instanceType: t2.small #production is only for demo. Selecting t2.small will incur cost
